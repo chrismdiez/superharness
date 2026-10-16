@@ -1,12 +1,63 @@
-# 06. Integraciones con agentes, Jira y GitHub
+# 🔗 06. Integraciones con agentes, Jira y GitHub
 
-## 1. Regla general
+> 📝 **Estado:** propuesta de diseño · 🎨 **Perfil visual:** `markdown-mermaid@1.0.0`
+
+
+**🧭 En este documento**
+
+- [Vista general](#vista-general)
+- [1. Regla general](#regla-general)
+- [2. Codex](#codex)
+- [3. Claude Code](#claude-code)
+- [4. La experiencia /super-* y el clear](#la-experiencia-super-y-el-clear)
+- [5. Capacidades y compatibilidad](#capacidades-y-compatibilidad)
+- [6. Jira](#jira)
+- [7. GitHub](#github)
+- [8. Permisos por fase](#permisos-por-fase)
+- [9. Robustez operativa](#robustez-operativa)
+
+<a id="vista-general"></a>
+
+## 🧭 Vista general
+
+```mermaid
+sequenceDiagram
+  accTitle: Orquestacion de agentes y servicios externos
+  accDescr: Go prepara el contexto, ejecuta el agente, valida su propuesta y realiza las acciones remotas autorizadas.
+  participant U as Usuario
+  participant G as Motor Go
+  participant K as Repo de conocimiento
+  participant A as Codex o Claude
+  participant R as Jira o GitHub
+  U->>G: Comando y SPEC
+  G->>K: Leer revisión aceptada
+  K-->>G: Contexto y manifiestos
+  G->>A: Nueva sesión con contrato
+  A-->>G: Propuesta estructurada
+  G->>G: Validar y comprobar gates
+  opt Operación remota autorizada
+    G->>R: Aplicar operación idempotente
+    R-->>G: Estado y recibo
+  end
+  G->>K: Guardar artefactos y progreso
+  G-->>U: Resultado y siguiente paso
+```
+
+Go prepara el contexto, ejecuta el agente, valida su propuesta y realiza las acciones remotas autorizadas.
+
+<a id="regla-general"></a>
+
+## 📝 1. Regla general
 
 Las integraciones son adaptadores del motor. El LLM no dispone de credenciales para mutar Jira o GitHub directamente: propone resultados estructurados y Go ejecuta las operaciones permitidas. Así se puede probar idempotencia, auditar acciones y mantener las mismas reglas con Codex y Claude.
 
 El modo inicial de conectores será lectura y simulación de escritura. Al configurar el producto se autorizarán explícitamente las operaciones deseadas —crear PR, actualizar el comentario de progreso, transicionar tickets— y esa política persistirá. No pedir confirmación repetida para cada operación ya autorizada.
 
-## 2. Codex
+El motor mantiene conexiones Git separadas para código y conocimiento. Todos los archivos de análisis, SPEC, prompts renderizados, informes y documentación se escriben en el repositorio complementario. No se instalan wrappers ni configuración de Superharness dentro de los repositorios analizados; se usan la instalación de usuario, el empaquetado de la herramienta o el repositorio de conocimiento.
+
+<a id="codex"></a>
+
+## 🔗 2. Codex
 
 Usar ejecución no interactiva: `codex exec --json` permite consumir eventos y `--output-schema` restringe la respuesta final. `--output-last-message` puede guardarla aparte. El modo de lectura es el predeterminado y `--sandbox workspace-write` habilita escritura donde corresponda. Crear una ejecución nueva por fase; `--ephemeral` controla la conservación de la sesión del proveedor, no sustituye el diario de Super. La autenticación CLI y el uso de API tienen condiciones propias. [Modo no interactivo de Codex](https://learn.chatgpt.com/docs/non-interactive-mode).
 
@@ -18,17 +69,21 @@ codex exec --json --sandbox read-only --output-schema <schema> -
 
 Go envía el prompt por stdin, captura eventos y valida la salida. Para develop selecciona escritura en un checkout aislado. `doctor` comprobará versión, flags, autenticación, modelo y política efectiva. No usar flags antiguos por memoria ni ampliar permisos automáticamente si un comando falla.
 
-Para accesos desde chat, Codex descubre skills de repositorio en `.agents/skills`. El empaquetado debe adaptarse a la superficie concreta; no se garantiza un slash arbitrario solo por crear un archivo Markdown. [Skills de Codex](https://learn.chatgpt.com/docs/build-skills).
+Para accesos desde chat, Codex admite descubrimiento local de skills; si se usa `.agents/skills` de un repositorio, será en el repo de conocimiento, no en el código analizado. El empaquetado debe adaptarse a la superficie concreta; no se garantiza un slash arbitrario solo por crear un archivo Markdown. [Skills de Codex](https://learn.chatgpt.com/docs/build-skills).
 
-## 3. Claude Code
+<a id="claude-code"></a>
+
+## 🔗 3. Claude Code
 
 El adaptador puede usar `claude -p`, `--output-format json` y `--json-schema`; debe leer el resultado estructurado y los metadatos, no confundirlos con la respuesta textual. También existe salida de eventos. Cada fase comienza sin `--continue` ni `--resume`. [Ejecución programática de Claude Code](https://code.claude.com/docs/en/headless).
 
-Las skills de proyecto en `.claude/skills/<nombre>/SKILL.md` pueden exponerse como slash commands. Un wrapper delega en la CLI Super; no reproduce su máquina de estados en el prompt. [Skills de Claude Code](https://code.claude.com/docs/en/skills).
+Las skills de proyecto en `.claude/skills/<nombre>/SKILL.md` pueden exponerse como slash commands; en este diseño se alojan fuera del código analizado, por ejemplo en el repo de conocimiento. Un wrapper delega en la CLI Super; no reproduce su máquina de estados en el prompt. [Skills de Claude Code](https://code.claude.com/docs/en/skills).
 
 El aislamiento de instrucciones de usuario, herramientas y memoria se comprobará por versión. El modo `--bare` documentado puede ayudar a controlar la carga automática, pero cambia la autenticación y los componentes cargados; no se activará suponiendo que conserva el login de suscripción. El contrato de Super debe funcionar con el modo elegido y probado.
 
-## 4. La experiencia /super-* y el clear
+<a id="la-experiencia-super-y-el-clear"></a>
+
+## 📝 4. La experiencia /super-* y el clear
 
 Hay tres capas diferentes:
 
@@ -42,13 +97,17 @@ La consola propia ofrece exactamente la sintaxis solicitada. Un chat existente p
 
 La documentación de Codex describe `/new` para iniciar otro chat; esa función de interfaz es distinta del proceso nuevo que garantiza Super. [Comandos de Codex](https://learn.chatgpt.com/docs/developer-commands?surface=cli).
 
-## 5. Capacidades y compatibilidad
+<a id="capacidades-y-compatibilidad"></a>
+
+## 📝 5. Capacidades y compatibilidad
 
 `doctor` generará un manifiesto con versión de CLI, autenticación disponible, modelos accesibles, schemas soportados, eventos, herramientas, límites, cancelación y sandbox. La interfaz común se limita a capacidades probadas; un proveedor que no pueda aplicar una política de fase debe rechazarla.
 
 Guardar `requested_model` y `resolved_model` si se puede conocer. No cambiar de modelo al agotar cuota sin registrarlo. Un fallback requiere una opción explícita de configuración y un run nuevo. Las pruebas de aceptación comparan comportamiento y contratos; una sesión Claude no debe intentar interpretar el formato interno de sesión de Codex.
 
-## 6. Jira
+<a id="jira"></a>
+
+## 🔗 6. Jira
 
 Se asume Jira Cloud para el primer adaptador. Jira Data Center necesita configuración y validación específicas. No se necesita automatizar el navegador ni «leer el panel» visualmente: integrar incidencias, campos y estados mediante API.
 
@@ -69,28 +128,30 @@ Contrato propuesto:
 
 Si cambia el ticket tras requirements, mostrar diff y crear revisión explícita. No reemplazar requisitos aceptados durante develop. Si la edición local y Jira divergen, pedir una resolución persistida; no aplicar «última escritura gana» a ciegas.
 
-## 7. GitHub
+<a id="github"></a>
+
+## 🔗 7. GitHub
 
 MVP: repositorio Git existente y acceso autenticado; API REST para PR o un adaptador `gh` probado. Para uso en equipo, evaluar GitHub App con permisos ajustados y tokens de instalación. El adaptador no registra secretos en comandos ni artefactos.
 
-La API de PR permite gestionar base, head, título, cuerpo y modo draft. Super fijará `base=develop`, verificará que la rama exista y leerá el recurso tras crearlo. [Pull requests en GitHub REST](https://docs.github.com/en/rest/pulls/pulls).
+La API de PR permite gestionar base, head, título, cuerpo y modo draft. Para la PR de código, Super fijará `base=develop`, verificará que la rama exista y leerá el recurso tras crearlo. [Pull requests en GitHub REST](https://docs.github.com/en/rest/pulls/pulls).
 
 Contenido de PR generado desde manifiestos:
 
 ```markdown
-# SPEC-001: <resultado de la entrega>
+# 📝 SPEC-001: <resultado de la entrega>
 
-## Problema y comportamiento resultante
+## 📝 Problema y comportamiento resultante
 <Qué cambia para el usuario y por qué>
 
-## Trazabilidad
-SPEC: <ruta o enlace> · Jira: <enlace verificado>
+## 🧩 Trazabilidad
+SPEC: <enlace al repo de conocimiento fijado a commit y ruta> · Jira: <enlace verificado>
 Requisitos: REQ-001, REQ-002 · ADR: ADR-001 o «no requiere nuevo ADR»
 
-## Validación
+## 🧪 Validación
 <Comandos, resultados, referencia de evidencia y commit evaluado>
 
-## Riesgos y operación
+## ⚠️ Riesgos y operación
 <Migración, compatibilidad, rollback y limitaciones reales>
 ```
 
@@ -98,7 +159,11 @@ La revisión remota necesita checks del commit correcto, reglas de rama, aprobac
 
 El orquestador puede publicar hallazgos como comentario/check si está autorizado, pero no convierte su propia evaluación en aprobación humana. Tampoco debe crear un comentario nuevo por cada consulta de estado sin cambios.
 
-## 8. Permisos por fase
+Para documentación, usar el repo de conocimiento y su rama canónica propia (propuesta: `main`). No reutilizar por error el remoto, número de PR o rama del producto. Si el repo complementario es solo local, registrar su commit y dejar la referencia documental como local: no inventar enlaces GitHub accesibles al revisor. El modo de colaboración remota exige publicar el conocimiento en un remoto configurado con acceso adecuado.
+
+<a id="permisos-por-fase"></a>
+
+## 📝 8. Permisos por fase
 
 | Fase | Código | Documentación | Jira | GitHub |
 |---|---|---|---|---|
@@ -109,9 +174,11 @@ El orquestador puede publicar hallazgos como comentario/check si está autorizad
 | review | Lectura; runner aislado | Informe | Enlace/progreso | Crear/actualizar PR, comprobar checks |
 | close | Lectura | Documentación de proyecto | Transición final configurada | Consultar integración; PR documental si necesaria |
 
-El orquestador puede hacer commits documentales y push sin modificar código de producto. Los cambios de configuración que afectan build/runtime/CI cuentan como código y solo se preparan en develop.
+La columna Documentación siempre apunta al repo externo. El orquestador puede hacer allí commits documentales y push sin modificar el código ni el HEAD de la PR del producto. Los cambios de configuración que afectan build/runtime/CI cuentan como código y solo se preparan en develop.
 
-## 9. Robustez operativa
+<a id="robustez-operativa"></a>
+
+## 📝 9. Robustez operativa
 
 Timeouts, reintentos con backoff y respeto de límites del servicio. Reintentar lecturas; antes de repetir escrituras, reconciliar por identificador o marcador. No asumir un header de idempotencia que el endpoint no documente.
 

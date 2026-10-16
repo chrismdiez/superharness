@@ -1,12 +1,48 @@
-# 10. Evidencias, fuentes y límites de verificación
+# 🔍 10. Evidencias, fuentes y límites de verificación
 
-## 1. Qué se ha hecho
+> 📝 **Estado:** propuesta de diseño · 🎨 **Perfil visual:** `markdown-mermaid@1.0.0`
+
+
+**🧭 En este documento**
+
+- [Vista general](#vista-general)
+- [1. Qué se ha hecho](#que-se-ha-hecho)
+- [2. Inventario observado](#inventario-observado)
+- [3. Evidencias locales de las convenciones](#evidencias-locales-de-las-convenciones)
+- [4. Fuentes primarias consultadas](#fuentes-primarias-consultadas)
+- [5. Ubicación acordada del conocimiento](#ubicacion-acordada-del-conocimiento)
+- [Fuentes del estándar visual](#fuentes-del-estandar-visual)
+- [6. Decisiones que debe cerrar setup](#decisiones-que-debe-cerrar-setup)
+
+<a id="vista-general"></a>
+
+## 🧭 Vista general
+
+```mermaid
+flowchart TD
+  accTitle: Separacion de evidencia y propuestas
+  accDescr: Los archivos respaldan convenciones observadas. Las fuentes oficiales respaldan capacidades. Las recomendaciones se etiquetan como propuestas.
+  Files["Archivos inspeccionados"] --> Observed["Convenciones observadas"]
+  Official["Fuentes oficiales"] --> Capabilities["Capacidades documentadas"]
+  Observed --> Plan["Plan con referencias"]
+  Capabilities --> Plan
+  Proposals["Decisiones propuestas"] --> Plan
+  Plan --> Limits["Límites y validaciones pendientes"]
+```
+
+Los archivos respaldan convenciones observadas. Las fuentes oficiales respaldan capacidades. Las recomendaciones se etiquetan como propuestas.
+
+<a id="que-se-ha-hecho"></a>
+
+## 📝 1. Qué se ha hecho
 
 Inspección de lectura realizada el 16 de octubre de 2026 sobre `F:\Proyectos\_Develapi`. Se enumeraron soluciones, proyectos, archivos C#, posibles archivos de instrucciones, configuración de estilo y referencias a herramientas de tests. Se leyeron ejemplos de contratos, validadores, casos de uso, repositorios, entidades, DI y endpoints.
 
 El plan se escribió inicialmente en `C:\Users\cmigu\Documents\New project\super-sdd-plan` y se copió al directorio del proyecto confirmado por el usuario: `F:\Proyectos\superharness\super-sdd-plan`. Esta última ubicación es la copia de trabajo vigente. No se ha implementado la CLI, instalado dependencias, modificado DevelApi, llamado a sus servicios ni creado recursos en Jira/GitHub.
 
-## 2. Inventario observado
+<a id="inventario-observado"></a>
+
+## 📝 2. Inventario observado
 
 | Dato | Resultado | Límite |
 |---|---|---|
@@ -22,7 +58,9 @@ El plan se escribió inicialmente en `C:\Users\cmigu\Documents\New project\super
 
 No se necesitan permisos adicionales para entregar este plan. Para implementar en el repositorio será necesario que el entorno permita trabajar en el checkout elegido.
 
-## 3. Evidencias locales de las convenciones
+<a id="evidencias-locales-de-las-convenciones"></a>
+
+## 🔍 3. Evidencias locales de las convenciones
 
 | Evidencia | Qué respalda |
 |---|---|
@@ -45,7 +83,9 @@ No se necesitan permisos adicionales para entregar este plan. Para implementar e
 
 Las rutas son del equipo donde se realizó la inspección. Para hacer portable el perfil se deben almacenar también rutas relativas, repo ID y hashes durante init. Las líneas son ayudas de navegación, no identificadores permanentes.
 
-## 4. Fuentes primarias consultadas
+<a id="fuentes-primarias-consultadas"></a>
+
+## 🔍 4. Fuentes primarias consultadas
 
 | Tema | Fuente | Uso en el plan |
 |---|---|---|
@@ -64,7 +104,23 @@ Las rutas son del equipo donde se realizó la inspección. Para hacer portable e
 
 La consulta documental valida capacidades generales, no su disponibilidad en tus cuentas ni la compatibilidad de una versión concreta instalada. Antes de implementar cada adaptador se fijarán versiones y tests de contrato. No se han usado cifras de precios ni prometido un modelo específico.
 
-## 5. Decisiones que debe cerrar setup
+<a id="ubicacion-acordada-del-conocimiento"></a>
+
+## 📝 5. Ubicación acordada del conocimiento
+
+Por indicación del usuario, el análisis inicial, todas las SPEC y la documentación general actualizada deben vivir en un repositorio Git separado del código analizado. Para DevelApi se propone `F:\Proyectos\_Develapi\develapi-superharness`, distinto del repositorio de la herramienta `F:\Proyectos\superharness`. La estructura y los contratos se definen en [el documento 11](11-repositorio-de-conocimiento.md). Esta actualización modifica el plan; no crea ese repositorio ni un remoto nuevo.
+
+<a id="fuentes-del-estandar-visual"></a>
+
+## 🔍 Fuentes del estándar visual
+
+La sintaxis de los nuevos diagramas se apoya en las referencias oficiales de [flowcharts](https://mermaid.js.org/syntax/flowchart.html) y [secuencias](https://mermaid.js.org/syntax/sequenceDiagram.html). El motor puede validar y renderizar en un entorno fijado; [Mermaid CLI](https://github.com/mermaid-js/mermaid-cli) es una opción de integración. El formato visual y las reglas de aplicación a cada artefacto son decisiones de este plan.
+
+**🧪 Verificación visual realizada:** 15 diagramas (incluido el ejemplo de plantilla) parseados y renderizados con Mermaid 11.12.0, con 30 renders entre tema claro y oscuro. Se inspeccionaron los resultados y se dividió la arquitectura en dos gráficos para mejorar su lectura. Esta versión identifica el entorno de QA de este plan; la versión del futuro motor se fijará en su toolchain. No se ha implementado todavía el renderizador Go ni sus gates de publicación.
+
+<a id="decisiones-que-debe-cerrar-setup"></a>
+
+## 🏗️ 6. Decisiones que debe cerrar setup
 
 | Decisión | Valor recomendado provisional | Consecuencia |
 |---|---|---|

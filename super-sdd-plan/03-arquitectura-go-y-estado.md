@@ -1,24 +1,53 @@
-# 03. Arquitectura Go, estado y recuperación
+# 🏗️ 03. Arquitectura Go, estado y recuperación
 
-## 1. Componentes
+> 📝 **Estado:** propuesta de diseño · 🎨 **Perfil visual:** `markdown-mermaid@1.0.0`
+
+**🧭 En este documento**
+
+- [1. Componentes](#componentes)
+- [2. Interfaces propuestas](#interfaces-propuestas)
+- [3. Quién es la fuente de verdad](#quien-es-la-fuente-de-verdad)
+- [4. Almacenamiento](#almacenamiento)
+- [5. Persistencia sin transacciones ficticias](#persistencia-sin-transacciones-ficticias)
+- [6. Contexto limpio de verdad](#contexto-limpio-de-verdad)
+- [7. Invalidación y concurrencia](#invalidacion-y-concurrencia)
+- [8. Garantía de escritura exclusiva](#garantia-de-escritura-exclusiva)
+- [9. Casos de recuperación obligatorios](#casos-de-recuperacion-obligatorios)
+- [10. Inicialización única y conocimiento por solución](#inicializacion-unica-y-conocimiento-por-solucion)
+
+<a id="componentes"></a>
+
+## 🏗️ 1. Componentes
 
 ```mermaid
-flowchart TD
-    CLI[CLI y consola Super] --> Engine[Motor de workflow Go]
-    Engine --> Contracts[Esquemas y validadores]
-    Engine --> State[Diario SQLite y almacenamiento de artefactos]
-    Engine --> Context[Constructor de contexto]
-    Context --> Graph[Adaptador del grafo]
-    Context --> Files[Fuentes y documentos versionados]
-    Engine --> Providers[Adaptadores de agentes]
-    Providers --> Codex[Codex CLI]
-    Providers --> Claude[Claude Code CLI]
-    Engine --> Runner[Runner aislado de build y tests]
-    Engine --> Git[Git y worktrees]
-    Engine --> Outbox[Operaciones remotas pendientes]
-    Outbox --> Jira[Jira]
-    Outbox --> GitHub[GitHub]
+flowchart LR
+  accTitle: Control del flujo y conocimiento
+  accDescr: La CLI invoca el motor, que valida contratos, prepara contexto y conserva el estado.
+  CLI["CLI Super"] --> Engine["Motor Go"]
+  Engine --> Contracts["Contratos y gates"]
+  Engine --> Context["Constructor de contexto"]
+  Engine --> State["SQLite y artefactos"]
+  Context --> Graph["Grafo de código"]
+  Context --> Docs["Conocimiento externo"]
 ```
+
+El núcleo valida las fases y recupera conocimiento sin depender del proveedor.
+
+```mermaid
+flowchart LR
+  accTitle: Ejecucion e integraciones
+  accDescr: El motor delega en agentes, runner aislado y outbox; cada adaptador conserva su responsabilidad.
+  Engine["Motor Go"] --> Agents["Adaptador de agente"]
+  Agents --> Codex["Codex"]
+  Agents --> Claude["Claude"]
+  Engine --> Runner["Runner aislado"]
+  Runner --> Git["Git y worktrees"]
+  Engine --> Outbox["Outbox"]
+  Outbox --> Jira["Jira"]
+  Outbox --> Github["GitHub"]
+```
+
+Los agentes proponen cambios, el runner produce evidencia y el outbox reconcilia operaciones remotas.
 
 El núcleo de dominio solo conoce SPEC, fases, tareas, evidencias y transiciones. No conoce flags concretos de Codex, JSON de Jira ni llamadas de GitHub. Esa separación facilita probarlo sin gastar tokens ni conectar cuentas.
 
@@ -32,6 +61,8 @@ internal/
   workflow/               # transiciones y ejecución de fases
   contracts/              # JSON Schema y validadores semánticos
   artifacts/              # manifiestos, hashes, publicación atómica
+  documentation/          # renderizador Markdown, iconos y diagramas
+  docvalidation/          # enlaces, estructura y validación Mermaid
   state/                  # SQLite, locks, journal, migraciones
   context/                # selección y presupuesto de contexto
   graph/                  # interfaz y consultas normalizadas
@@ -56,7 +87,9 @@ tests/
 
 Preferir biblioteca estándar para procesos, HTTP, JSON y hashing; seleccionar bibliotecas de CLI, SQLite y JSON Schema en una tarea dedicada y fijarlas en `go.mod`/`go.sum`. No se fija aquí una dependencia sin probar distribución Windows/Linux y compatibilidad. El binario será Go; el indexador externo, Codex, Claude y .NET siguen siendo dependencias operativas. «Hecho en Go» no implica que toda la cadena sea un único ejecutable sin runtimes.
 
-## 2. Interfaces propuestas
+<a id="interfaces-propuestas"></a>
+
+## 📝 2. Interfaces propuestas
 
 Pseudocódigo Go: los tipos de dominio se completarán durante implementación.
 
@@ -87,48 +120,58 @@ type PullRequestHost interface {
 
 La cancelación necesita terminar el árbol de procesos, no solo el proceso padre: estrategia específica para Windows y Unix, timeout, drenaje de stdout/stderr y registro de interrupción. Usar argumentos separados con `exec.CommandContext`; no construir comandos shell concatenando texto del ticket.
 
-## 3. Quién es la fuente de verdad
+<a id="quien-es-la-fuente-de-verdad"></a>
+
+## 🔍 3. Quién es la fuente de verdad
 
 | Información | Fuente de verdad | Copias/derivados |
 |---|---|---|
 | Código integrado | Git remoto y commit verificado | Checkout y grafo |
-| Requisitos y decisiones aceptadas | Artefactos versionados y manifiesto de revisión | Paquete de contexto |
+| Requisitos y decisiones aceptadas | Repo externo de conocimiento: artefactos y manifiesto de revisión | Paquete de contexto |
 | Ticket en el momento del análisis | Snapshot de fuente con hash | `source.md` normalizado |
 | Estado de ejecución y operaciones pendientes | Diario transaccional SQLite | `state.json`, consola y handoff |
 | Estado remoto de PR/Jira | Consulta al servicio | Recibos locales con fecha |
 | Relaciones de código | Código/compilación del snapshot | Base de grafo reconstruible |
 | Texto generado de requisitos | JSON aceptado | Markdown renderizado |
 
+Un renderizador central aplica `markdown-mermaid@1.0.0` a todos los `.md` del flujo. El agente propone contenido y relaciones; Go determina la plantilla, los iconos, las secciones y la emisión de diagramas. El perfil visual y la versión del validador Mermaid forman parte del manifiesto de herramientas. La validación y los renders temporales se guardan en el runtime externo, sin contaminar el código.
+
 Los Markdown que son vistas generadas llevan esa indicación. Los documentos editables, como la fuente y respuestas humanas, tienen un proceso de importación: parsear, validar y crear una revisión. No se mantienen JSON y Markdown editables de forma independiente sin reconciliarlos.
 
 SQLite no se versiona ni se comparte en una unidad de red entre desarrolladores. Para pasar trabajo a otra máquina se exporta un bundle con manifiestos, estado, evidencias relevantes y hashes. El receptor verifica el bundle y el Git correspondiente antes de reconstruir su diario local. Un clone con solo Markdown puede mostrar planificación; no puede certificar tests que no están presentes o enlazados a una evidencia accesible de CI.
 
-## 4. Almacenamiento
+<a id="almacenamiento"></a>
+
+## 📁 4. Almacenamiento
+
+Todo lo siguiente reside en el repositorio externo de conocimiento, por ejemplo `F:\Proyectos\_Develapi\develapi-superharness`. No se crean estos directorios dentro de las soluciones analizadas.
 
 ```text
-.super/
-  config.yaml                  # configuración del repo, sin secretos
-  toolchain.lock.json           # versiones y hashes de plantillas/perfil
-  runtime/                     # ignorado por Git
-    state.db
-    runs/<run-id>/
-      input-manifest.json
-      context.md
-      events.jsonl
-      result.json
-      evidence/
-      staging/
-  cache/graph/                  # ignorado por Git, reconstruible
-docs/sdd/
-  project/                     # conocimiento aceptado del proyecto
-  specs/SPEC-001/               # artefactos compartidos
+develapi-superharness/
+  .git/
+  .gitignore                   # solo para este repo complementario
+  .super/
+    config.yaml                # asociación a repos y soluciones, sin secretos
+    solutions/<solution-id>.json  # manifiesto de init único
+    toolchain.lock.json
+    runtime/                   # ignorado por Git
+      state.db
+      runs/<run-id>/            # contexto, eventos, staging y evidencias
+    cache/graph/               # ignorado; separado por repo/snapshot
+  .baseline/<solution-id>/      # análisis inicial conservado
+  .project/<solution-id>/       # documentación general vigente
+  .specs/SPEC-001/              # artefactos de cada SPEC
 ```
 
-No guardar prompts completos con datos sensibles en Git. Los logs privados tienen redacción, retención configurable y permisos de archivo restringidos. La evidencia pública contiene resultados y referencias necesarias, no tokens de acceso ni datos reales de usuarios.
+Los metadatos de repositorio incluyen IDs estables, solución y rutas relativas al repo de conocimiento; las rutas absolutas de cada equipo son overrides locales ignorados. Las SPEC declaran su solución y repositorio de código. Un repo complementario puede organizar todo DevelApi sin convertirlo en un único repo de código.
 
-Tablas mínimas: `specs`, `spec_revisions`, `phase_runs`, `task_runs`, `artifacts`, `evidence`, `approvals`, `events`, `locks`, `outbox`, `remote_receipts`. Restricciones únicas sobre `(repo_id, spec_id)`, `run_id`, clave de idempotencia y revisión del agregado.
+No guardar secretos ni logs sensibles en Git. El runtime y la caché son locales e ignorados; resúmenes y manifiestos de evidencia aptos para compartir sí se versionan aquí. No copiar el árbol de código dentro del conocimiento: usar referencias a repo, commit, ruta y símbolo.
 
-## 5. Persistencia sin transacciones ficticias
+Tablas mínimas: `solutions`, `specs`, `spec_revisions`, `phase_runs`, `task_runs`, `artifacts`, `evidence`, `approvals`, `events`, `locks`, `outbox`, `remote_receipts`. Identidad de SPEC: `(knowledge_repo_id, spec_id)`; `solution_id` y `code_repo_id` son referencias explícitas. Unicidad también para run, clave de idempotencia y revisión del agregado.
+
+<a id="persistencia-sin-transacciones-ficticias"></a>
+
+## 📝 5. Persistencia sin transacciones ficticias
 
 Un commit SQLite y un rename de archivos no forman una única transacción. Protocolo propuesto:
 
@@ -141,9 +184,11 @@ Un commit SQLite y un rename de archivos no forman una única transacción. Prot
 
 Al arrancar, buscar publicaciones preparadas. Si los archivos completos coinciden, terminar el commit; si no, mantener la última revisión válida y registrar recuperación. Nunca avanzar el estado solo porque un `.md` exista.
 
-Para operaciones remotas se usa outbox: registrar intención, efectuar operación idempotente, guardar recibo y reconciliar. Si GitHub creó la PR pero la respuesta se perdió, buscarla antes de reintentar. No prometer una transacción distribuida entre Git, SQLite, Jira y GitHub.
+Para operaciones remotas se usa outbox: registrar intención, efectuar operación idempotente, guardar recibo y reconciliar. Si GitHub creó la PR pero la respuesta se perdió, buscarla antes de reintentar. No prometer una transacción distribuida entre el Git de código, el Git de conocimiento, SQLite, Jira y GitHub. Un cierre conserva sus pasos confirmados y reintenta solo los pendientes, con commits y ramas diferenciados.
 
-## 6. Contexto limpio de verdad
+<a id="contexto-limpio-de-verdad"></a>
+
+## 🔄 6. Contexto limpio de verdad
 
 Cada invocación hace lo siguiente:
 
@@ -158,23 +203,29 @@ El paquete contiene reglas aplicables, objetivo de fase, artefactos aceptados, p
 
 Las instrucciones de repositorio deben seguir aplicándose. Para reproducibilidad se registran y fijan; no se eluden políticas organizativas para conseguir una configuración idéntica. Cambios de configuración personal no registrados invalidan la etiqueta de ejecución reproducible.
 
-## 7. Invalidación y concurrencia
+<a id="invalidacion-y-concurrencia"></a>
+
+## 🧪 7. Invalidación y concurrencia
 
 Cada artefacto declara `inputs[]` con hash y versión. El motor mantiene un DAG de dependencias. Un cambio de requisito invalida descendientes; un cambio de estilo invalida comprobaciones de estilo; una actualización del grafo obliga a revalidar referencias afectadas, no necesariamente a reescribir toda la SPEC.
 
-El bloqueo local se toma por `(repo, SPEC)` y el escritor de código por worktree. Contiene propietario, run, heartbeat y vencimiento; recuperar un lock vencido requiere comprobar que el proceso anterior no sigue activo. Actualizaciones de estado usan compare-and-swap sobre revisión.
+El bloqueo local de SPEC se toma por `(knowledge_repo_id, SPEC)` y el escritor de código por worktree. Contiene propietario, run, heartbeat y vencimiento; recuperar un lock vencido requiere comprobar que el proceso anterior no sigue activo. Actualizaciones de estado usan compare-and-swap sobre revisión.
 
 Dos máquinas no quedan coordinadas por SQLite local. MVP: una rama/SPEC tiene un propietario y se rechazan pushes no fast-forward o divergencias. Evolución: coordinador remoto con leases y operaciones condicionales. Nunca usar force-push automático para resolver concurrencia.
 
-## 8. Garantía de escritura exclusiva
+<a id="garantia-de-escritura-exclusiva"></a>
+
+## 📝 8. Garantía de escritura exclusiva
 
 Un prompt que diga «no edites» no es un control suficiente. Requirements, design y task trabajan con snapshot de código de solo lectura; el modelo devuelve JSON y el orquestador publica los documentos. Review ejecuta tests en checkout desechable con runner controlado: los tests pueden generar `bin/obj` y salidas temporales, pero ningún cambio del producto se publica.
 
-Develop trabaja en checkout dedicado con rutas autorizadas. Init y close disponen solo de escritura documental y de configuración propia. Denegar escapes de ruta, symlinks/junctions fuera del scope y acceso de escritura a credenciales, remotos o worktrees ajenos. Si el proveedor no permite aplicar la política necesaria en el host, usar aislamiento externo o rechazar el modo; no fingir aislamiento.
+Develop trabaja en checkout dedicado con rutas autorizadas. Init y close disponen solo de escritura documental y de configuración propia en el repositorio externo; el código permanece de solo lectura. La salida de cada proceso y su staging apuntan al repo complementario, aunque su directorio de lectura sea un checkout de código. Denegar escapes de ruta, symlinks/junctions fuera del scope y acceso de escritura a credenciales, remotos o worktrees ajenos. Si el proveedor no permite aplicar la política necesaria en el host, usar aislamiento externo o rechazar el modo; no fingir aislamiento.
 
 Toda fase compara el árbol antes y después, incluyendo archivos no seguidos y archivos de build/configuración. Las evidencias y el runtime quedan fuera del hash del árbol del producto para evitar que escribir un log invalide su propia evidencia. Se guardan por separado `product_tree_hash`, `artifact_manifest_hash` y `full_commit_sha`.
 
-## 9. Casos de recuperación obligatorios
+<a id="casos-de-recuperacion-obligatorios"></a>
+
+## 🔄 9. Casos de recuperación obligatorios
 
 | Incidente | Comportamiento |
 |---|---|
@@ -188,3 +239,17 @@ Toda fase compara el árbol antes y después, incluyendo archivos no seguidos y 
 | Cambio de HEAD tras review | Invalidar aprobación y checks asociados; volver a review |
 
 Las migraciones de schemas y SQLite se versionan y se prueban con copia previa. Un binario antiguo debe rechazar un schema futuro que no entienda.
+
+<a id="inicializacion-unica-y-conocimiento-por-solucion"></a>
+
+## 📝 10. Inicialización única y conocimiento por solución
+
+La identidad de inicialización es `(code_repo_id, solution_id)`, registrada en el repo de conocimiento asociado, no el usuario, la máquina, la SPEC ni el worktree. Guardar en el Git del repositorio externo de conocimiento `.super/solutions/<solution-id>.json` con ruta relativa de la solución, schema, estado de inicialización y manifiesto del baseline. No depender solo de SQLite local para saber si la solución está inicializada.
+
+Init adquiere un lock por solución y publica `INITIALIZED` tras confirmar los artefactos de alta. Una invocación posterior devuelve `ALREADY_INITIALIZED` sin escribir ni invocar al proveedor. Una interrupción durante el alta permite reanudar ese mismo proceso sin crear otro baseline. Migraciones y reparación de caché son mantenimiento, no nuevas inicializaciones.
+
+Cada close publica una revisión del conocimiento integrado con manifiesto documental, commit de integración y SPEC de origen. New carga esa revisión y fija su hash en los inputs. Una SPEC en curso detecta revisiones posteriores y evalúa el impacto antes de actualizar referencias. Conservar revisiones permite reproducir qué información usó cada feature.
+
+El MVP selecciona una solución explícitamente. Si el repo de conocimiento agrupa varias soluciones, separar catálogos por `solution_id` —por ejemplo, `.project/<solution-id>/` dentro de ese repo— y namespaces de caché/estado, manteniendo `spec_id` único en el repo de conocimiento. Los proyectos `.csproj` de una solución no cuentan como soluciones distintas.
+
+Al clonar el repositorio de conocimiento se recuperan manifiestos y documentos compartidos; SQLite y el índice local se reconstruyen sin ejecutar init. Los cierres concurrentes deben reconciliar cambios documentales sobre la última base integrada, evitando borrar el conocimiento aportado por otra SPEC.

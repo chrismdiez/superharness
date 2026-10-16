@@ -1,12 +1,54 @@
-# 05. Estándar .NET basado en DevelApi
+# ⚙️ 05. Estándar .NET basado en DevelApi
 
-## 1. Alcance y grado de certeza
+> 📝 **Estado:** propuesta de diseño · 🎨 **Perfil visual:** `markdown-mermaid@1.0.0`
+
+
+**🧭 En este documento**
+
+- [Vista general](#vista-general)
+- [1. Alcance y grado de certeza](#alcance-y-grado-de-certeza)
+- [2. Estructura de soluciones](#estructura-de-soluciones)
+- [3. Dependencias entre capas](#dependencias-entre-capas)
+- [4. Carpetas y nombres](#carpetas-y-nombres)
+- [5. Formato y estilo C#](#formato-y-estilo-c)
+- [6. Comentarios y documentación XML](#comentarios-y-documentacion-xml)
+- [7. Validación, persistencia y errores](#validacion-persistencia-y-errores)
+- [8. Logging, eventos y seguridad](#logging-eventos-y-seguridad)
+- [9. TDD y pruebas: estándar propuesto](#tdd-y-pruebas-estandar-propuesto)
+- [10. Enforcement progresivo](#enforcement-progresivo)
+- [11. Perfil compartido](#perfil-compartido)
+
+<a id="vista-general"></a>
+
+## 🧭 Vista general
+
+```mermaid
+flowchart TD
+  accTitle: Flujo de un caso de uso DevelApi
+  accDescr: El endpoint delega en el controlador e interactor. El interactor valida y ejecuta el servicio antes de presentar la respuesta.
+  Endpoint["Endpoint HTTP"] --> Controller["IController"]
+  Controller --> Interactor["Interactor"]
+  Interactor --> Validate["Servicio: Validate"]
+  Validate -->|Válido| Execute["Servicio: Execute"]
+  Validate -->|Inválido| Error["Excepción de validación"]
+  Execute --> Ports["Interfaces Commands y Queries"]
+  Ports --> EF["Implementación EF"]
+  Execute --> Presenter["IOutputPort y Presenter"]
+```
+
+El endpoint delega en el controlador e interactor. El interactor valida y ejecuta el servicio antes de presentar la respuesta.
+
+<a id="alcance-y-grado-de-certeza"></a>
+
+## 🎯 1. Alcance y grado de certeza
 
 Se inspeccionaron nombres de proyectos y archivos, configuraciones y una muestra de código en `F:\Proyectos\_Develapi` el 16 de octubre de 2026. Se localizaron **32 `.csproj`, todos con `TargetFramework=net10.0`, y 431 `.cs` excluyendo `bin/obj`**. No se ejecutó build ni tests. Git no permitió acceder a esos directorios desde esta sesión, por lo que no hay un commit de referencia verificado.
 
 Etiquetas usadas: **O** = observado en archivos; **P** = propuesta para formalizar o mejorar; **V** = validar antes de convertir en obligación global. Este estándar es un perfil inicial, no una afirmación de que todo el repositorio ya lo cumple. Las [evidencias](10-evidencias-y-fuentes.md) permiten contrastarlo.
 
-## 2. Estructura de soluciones
+<a id="estructura-de-soluciones"></a>
+
+## 📁 2. Estructura de soluciones
 
 **O:** tres soluciones `.slnx` localizadas: Core, Gateway y Library. Core contiene varios proyectos de paquetes compartidos dentro de su solución. Las carpetas `develapi-endpoints` y `develapi-web` también existen, pero este perfil se centra en .NET.
 
@@ -47,7 +89,9 @@ develapi-<aplicacion>/
 
 **O:** `develapi-core` distribuye proyectos de capacidades, por ejemplo `DevelApi.Core.Email.Abstractions` y `DevelApi.Core.Email.Application`. No imponerle el árbol de una API.
 
-## 3. Dependencias entre capas
+<a id="dependencias-entre-capas"></a>
+
+## 🧩 3. Dependencias entre capas
 
 En los proyectos inspeccionados, Gateway Core referencia Common; UseCases referencia Core, Dtos y Events. Library UseCases referencia Common, Core, Dtos y Events. Library Dtos referencia Common y Core. Api referencia IoC. Esto se debe respetar al extraer el baseline; no describir el estado actual como una arquitectura con dominio completamente independiente si las referencias dicen otra cosa.
 
@@ -63,7 +107,9 @@ Endpoint → IController<TRequest,TResponse> → IInputPort / Interactor
 
 No añadir MediatR, otro mediator o un bus nuevo sin necesidad y ADR. La separación Commands/Queries observada no demuestra event sourcing ni CQRS distribuido completo.
 
-## 4. Carpetas y nombres
+<a id="carpetas-y-nombres"></a>
+
+## 📁 4. Carpetas y nombres
 
 | Elemento | Regla | Ejemplo |
 |---|---|---|
@@ -96,7 +142,9 @@ src/DevelApi.Library.EF.Repositories/Book/<Operacion>/
 
 Crear solo los componentes necesarios. Un GET no necesita obligatoriamente Commands ni un evento.
 
-## 5. Formato y estilo C#
+<a id="formato-y-estilo-c"></a>
+
+## ⚙️ 5. Formato y estilo C#
 
 **O:** la muestra usa namespaces de archivo (`namespace X;`), `using` después del namespace, llaves Allman, cuatro espacios, tipos y miembros públicos PascalCase, parámetros/locales/campos privados camelCase sin `_`, campos `readonly` para dependencias y acceso con `this.`. Usa constructores explícitos e inyección por constructor.
 
@@ -126,9 +174,11 @@ dotnet_style_qualification_for_event = true:warning
 indent_style = tab
 ```
 
-No fijar aquí una codificación o EOL C# como hecho observado. Medirla y resolverla en la adopción del perfil. Para Markdown dentro de Gateway conservar su regla existente; para este plan independiente se usa UTF-8. Validar las opciones contra el SDK/analyzers fijados, sin activar todas las advertencias como errores antes de conocer la deuda.
+No fijar aquí una codificación o EOL C# como hecho observado. Medirla y resolverla en la adopción del perfil. La regla Markdown de Gateway describe sus archivos existentes; no se generarán SPEC ni documentos Superharness allí. El repo complementario define su propio formato Markdown; para este plan independiente se usa UTF-8. Validar las opciones contra el SDK/analyzers fijados, sin activar todas las advertencias como errores antes de conocer la deuda.
 
-## 6. Comentarios y documentación XML
+<a id="comentarios-y-documentacion-xml"></a>
+
+## 📝 6. Comentarios y documentación XML
 
 **O:** cabecera `<copyright ... company="PlaceholderCompany">` y XML `summary`, `param`, `returns`, `typeparam`. Los proyectos de la muestra generan documentación XML e incluyen StyleCop.Analyzers 1.1.118 y `stylecop.json`.
 
@@ -138,7 +188,9 @@ No fijar aquí una codificación o EOL C# como hecho observado. Medirla y resolv
 
 La muestra contiene descripciones copiadas: `BookEndpoints` dice «User endpoints» y `BookGetQueries` dice «User Create Queries». Son incidencias a evitar, no convenciones que se deban reproducir. La validez de XML se comprueba automáticamente; la correspondencia semántica del comentario requiere revisión.
 
-## 7. Validación, persistencia y errores
+<a id="validacion-persistencia-y-errores"></a>
+
+## 🧪 7. Validación, persistencia y errores
 
 **O:** FluentValidation reside junto al Request; UseCases llama al validador y lanza `RequestValidationException`. Reglas de negocio producen excepciones compartidas y constantes de error. Commands usa contexto de escritura y Queries contexto de lectura; la muestra usa `AsNoTracking`, especificaciones y `DataContextGuards.SaveChanges`.
 
@@ -148,13 +200,17 @@ No forzar `AsSplitQuery` en todas las consultas ni copiar una opción sin analiz
 
 **O:** se usan `Id` interno, `PublicId` GUID, `Guid.CreateVersion7()` y fechas UTC en servicios examinados. **P:** conservar el patrón donde aplique y permitir reloj inyectable para nuevos comportamientos dependientes del tiempo; es una mejora, no una convención ya verificada en todo el repo.
 
-## 8. Logging, eventos y seguridad
+<a id="logging-eventos-y-seguridad"></a>
+
+## 📝 8. Logging, eventos y seguridad
 
 **O:** `IAppLogger<T>`, mensajes `IN ->` y `OUT <-`, y handlers de eventos. **P:** mantener compatibilidad, usar propiedades estructuradas y no registrar credenciales, tokens, hashes sensibles ni contenido personal innecesario. Evitar logs de entrada/salida redundantes cuando no aporten observabilidad.
 
 Un servicio inspeccionado dispara trabajo con `Task.Run` sin esperar en el flujo principal. No convertirlo en patrón de entrega garantizada. Si un requisito exige entrega fiable de eventos, diseñar outbox/cola y pruebas específicas. Tampoco copiar atributos de autorización comentados como política de acceso de endpoints nuevos: la SPEC debe declarar autenticación, autorización y aislamiento de usuario/tenant aplicables.
 
-## 9. TDD y pruebas: estándar propuesto
+<a id="tdd-y-pruebas-estandar-propuesto"></a>
+
+## 🧪 9. TDD y pruebas: estándar propuesto
 
 No se encontraron proyectos con `IsTestProject` ni referencias a xUnit, NUnit, MSTest o Microsoft.NET.Test.Sdk en los `.csproj` inspeccionados. Esto justifica crear infraestructura de pruebas antes del primer ciclo TDD; no demuestra ausencia absoluta de pruebas externas.
 
@@ -169,7 +225,9 @@ tests/
 
 Gherkin puede mapearse a tests C# mediante IDs, sin framework BDD en la primera entrega. Si se quiere ejecutar `.feature` directamente, seleccionar runner compatible en un ADR y probarlo. No llamar «escenario ejecutado» a un archivo `.feature` que nadie ejecuta.
 
-## 10. Enforcement progresivo
+<a id="enforcement-progresivo"></a>
+
+## 📝 10. Enforcement progresivo
 
 1. Medir compilación, warnings, formato y estructura existentes.
 2. Fijar SDK en `global.json`, paquetes, perfil y comandos; son incorporaciones propuestas, no archivos encontrados.
@@ -188,7 +246,9 @@ dotnet format <solucion> --verify-no-changes --no-restore
 
 El runner debe comprobar que se descubrieron y ejecutaron tests; cero tests no es éxito. `--no-build` exige haber construido esos proyectos con la misma configuración. `dotnet format --verify-no-changes` verifica sin aplicar formato; el arreglo se realiza en develop. [Documentación de dotnet format](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-format).
 
-## 11. Perfil compartido
+<a id="perfil-compartido"></a>
+
+## ⚙️ 11. Perfil compartido
 
 Publicar `dotnet-develapi@0.1.0` con reglas, ejemplos de referencia, validadores y variantes Gateway/Library. Cada regla tendrá ID, origen O/P, severidad, scope, detector y excepción permitida. Ejemplos: `DOTNET-LAYOUT-001`, `DOTNET-NAMING-001`, `DOTNET-DOC-001`, `DOTNET-TDD-001`.
 

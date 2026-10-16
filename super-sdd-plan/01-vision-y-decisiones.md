@@ -1,6 +1,40 @@
-# 01. Visión, alcance y decisiones
+# 🎯 01. Visión, alcance y decisiones
 
-## 1. Qué significa SDD en esta propuesta
+> 📝 **Estado:** propuesta de diseño · 🎨 **Perfil visual:** `markdown-mermaid@1.0.0`
+
+
+**🧭 En este documento**
+
+- [Vista general](#vista-general)
+- [1. Qué significa SDD en esta propuesta](#que-significa-sdd-en-esta-propuesta)
+- [2. Producto y límites](#producto-y-limites)
+- [3. Decisiones arquitectónicas iniciales](#decisiones-arquitectonicas-iniciales)
+- [4. Cómo conseguir resultados similares](#como-conseguir-resultados-similares)
+- [5. Estándares y excepciones](#estandares-y-excepciones)
+- [6. Indicadores de éxito](#indicadores-de-exito)
+
+<a id="vista-general"></a>
+
+## 🧭 Vista general
+
+```mermaid
+flowchart TD
+  accTitle: Trazabilidad de la entrega
+  accDescr: Cada entrega enlaza su fuente con requisitos, decisiones, tareas, pruebas y evidencia de cierre.
+  Source["Fuente"] --> Spec["SPEC"]
+  Spec --> Req["Requisitos"]
+  Req --> Design["Diseño y ADR"]
+  Design --> Task["Tareas"]
+  Task --> Test["Tests y código"]
+  Test --> Evidence["Evidencias"]
+  Evidence --> Close["Review y cierre"]
+```
+
+Cada entrega enlaza su fuente con requisitos, decisiones, tareas, pruebas y evidencia de cierre.
+
+<a id="que-significa-sdd-en-esta-propuesta"></a>
+
+## 🎯 1. Qué significa SDD en esta propuesta
 
 Se interpreta SDD como **Specification-Driven Development**: la especificación versionada define el alcance, los comportamientos esperados y las restricciones. El diseño, las tareas, el código, las pruebas y la documentación deben poder relacionarse con ella.
 
@@ -14,13 +48,15 @@ Un requisito sin una forma de comprobarlo está incompleto. Una tarea sin requis
 
 **Gherkin no es un modelo de lenguaje.** Es una sintaxis para describir comportamientos mediante escenarios. Codex o Claude pueden producir esos escenarios. Los requisitos técnicos adicionales —rendimiento, compatibilidad, dependencias, concurrencia, observabilidad— necesitan también condiciones medibles y un método de verificación. [Referencia de Gherkin](https://cucumber.io/docs/gherkin/reference/).
 
-## 2. Producto y límites
+<a id="producto-y-limites"></a>
+
+## ⚠️ 2. Producto y límites
 
 | Capacidad | MVP | Evolución |
 |---|---|---|
 | CLI Go y archivos locales | Sí | Consola interactiva y panel opcional |
 | Adaptador Codex | Sí | Claude Code con los mismos contratos |
-| Un repositorio por SPEC | Sí | Coordinación explícita entre varios repositorios |
+| Repositorios por SPEC | Un repo de código + un repo externo de conocimiento | Varios repositorios de código por SPEC |
 | Fuente de ticket local | Primero | Jira Cloud; Data Center como adaptador distinto |
 | GitHub PR hacia develop | Sí, tras flujo local | Webhooks y GitHub App para equipos |
 | Grafo de C# | Piloto y modo degradado explícito | Dependencias entre servicios y otros lenguajes |
@@ -30,7 +66,9 @@ Un requisito sin una forma de comprobarlo está incompleto. Una tarea sin requis
 
 El alcance es el ciclo de ingeniería hasta integración y actualización del conocimiento. Despliegue, aprobación de producción, seguimiento de incidentes y gestión comercial requieren contratos adicionales; no se darán por resueltos por cerrar una SPEC.
 
-## 3. Decisiones arquitectónicas iniciales
+<a id="decisiones-arquitectonicas-iniciales"></a>
+
+## 🏗️ 3. Decisiones arquitectónicas iniciales
 
 | ID | Decisión propuesta | Motivo y coste |
 |---|---|---|
@@ -42,16 +80,21 @@ El alcance es el ciclo de ingeniería hasta integración y actualización del co
 | ADR-SUP-006 | Escritura de código exclusiva de develop | Review detecta y describe; develop corrige y vuelve a probar |
 | ADR-SUP-007 | Control de cambios por hashes y revisión | Evita aprobar resultados de una versión anterior |
 | ADR-SUP-008 | Perfil DevelApi versionado | Estandariza sin imponer una arquitectura ajena al repositorio |
-| ADR-SUP-009 | Review independiente y cierre en dos momentos | Evita que la documentación posterior invalide una aprobación sin advertirlo |
+| ADR-SUP-009 | Review independiente y cierre coordinado entre repositorios | Verifica el código integrado y su conocimiento publicado sin mezclar ramas |
+| ADR-SUP-010 | Repo externo de conocimiento obligatorio | Análisis, SPEC y documentación generada quedan fuera del código analizado |
+| ADR-SUP-011 | Perfil visual común para todo Markdown generado | Iconos y Mermaid coherentes, renderizados y validados de forma central |
 
 Estos ADR están propuestos, no aceptados mediante una decisión real del equipo. Para implementarlos, convertir cada fila en un ADR del propio producto con contexto, alternativas y consecuencias.
 
-## 4. Cómo conseguir resultados similares
+<a id="como-conseguir-resultados-similares"></a>
+
+## 📝 4. Cómo conseguir resultados similares
 
 La unidad reproducible no es solo `SPEC-001`. Es:
 
 ```text
-source hash + revision SPEC + commit del repo + cambios locales admitidos
+source hash + revision SPEC + commit del repo de código + commit de conocimiento
++ cambios locales admitidos
 + versiones de perfil, plantillas, prompts, herramientas y proveedor
 + configuración de modelo + selección de contexto + respuestas aprobadas
 ```
@@ -71,13 +114,17 @@ Recomendaciones concretas:
 
 Los parámetros que reducen variación solo se fijan cuando el modelo los admite. No se presupone soporte de temperatura o semilla ni se promete determinismo matemático.
 
-## 5. Estándares y excepciones
+<a id="estandares-y-excepciones"></a>
+
+## ⚙️ 5. Estándares y excepciones
 
 Orden de autoridad propuesto: políticas organizativas y permisos efectivos → configuración aprobada del repositorio → perfil .NET fijado → especificación aceptada → diseño → tarea → material recuperado. Una instrucción dentro de un ticket o un comentario de código es material de trabajo, no una autorización para cambiar las reglas del ejecutor.
 
 Una excepción necesita `rule_id`, razón, alcance, responsable y revisión de SPEC. Nunca convertir un fallo en éxito suprimiendo una regla silenciosamente. La deuda previa se registra como baseline; no obliga a reformatear todo el repositorio en cada feature.
 
-## 6. Indicadores de éxito
+<a id="indicadores-de-exito"></a>
+
+## 🎯 6. Indicadores de éxito
 
 | Indicador | Objetivo inicial propuesto |
 |---|---|
