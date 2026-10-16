@@ -43,7 +43,7 @@ Una fase valida entradas, produce resultados y solo avanza tras superar sus cont
 
 ## 📝 1. Interfaz de usuario
 
-La CLI estable será `super <comando> [SPEC]`. La consola propia `super shell` traducirá `/super-*` a esa CLI sin pedir al modelo que interprete el nombre. Los adaptadores para chats serán accesos cómodos al mismo motor.
+La interfaz principal será **esta ventana de Codex**. El usuario escribe `/super-new SPEC-001` y una skill instalada llama al ejecutable Go mediante el contrato interno `super new SPEC-001`. Las skills despachan y muestran resultados; Go resuelve el proyecto, valida entradas y controla el flujo. No se requiere abrir una terminal ni ejecutar `super shell`. Ver [instalación, despacho y contexto](13-interfaz-codex-y-despacho.md).
 
 | Interfaz solicitada | CLI canónica | Entrada principal | Estado de éxito |
 |---|---|---|---|
@@ -58,7 +58,7 @@ La CLI estable será `super <comando> [SPEC]`. La consola propia `super shell` t
 
 `super-requirements` y `super-requeriments` serán aliases equivalentes. Los ejemplos futuros con `--source`, `--resume`, `--replan`, `--refresh-source`, `--provider` y `--prepare` describen opciones a implementar, no opciones existentes hoy.
 
-Operaciones auxiliares: `super status SPEC-001`, `super doctor`, `super validate SPEC-001`, `super answer SPEC-001 Q-001 --file respuesta.md` y `super sync SPEC-001`. Muestran o mantienen el proceso; no añaden otra vía para editar código.
+Operaciones auxiliares también desde el chat: `/super-status SPEC-001`, `/super-doctor`, `/super-validate SPEC-001`, `/super-answer SPEC-001 Q-001 --file respuesta.md` y `/super-sync SPEC-001`. Cada skill llama al subcomando Go equivalente. Muestran o mantienen el proceso; no añaden otra vía para editar código.
 
 <a id="contrato-comun-de-ejecucion"></a>
 

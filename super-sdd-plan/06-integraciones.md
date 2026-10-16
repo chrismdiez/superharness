@@ -24,7 +24,7 @@
 sequenceDiagram
   accTitle: Orquestacion de agentes y servicios externos
   accDescr: Go prepara el contexto, ejecuta el agente, valida su propuesta y realiza las acciones remotas autorizadas.
-  participant U as Usuario
+  participant U as Chat Codex y skill
   participant G as Motor Go
   participant K as Repo de conocimiento
   participant A as Codex o Claude
@@ -69,7 +69,7 @@ codex exec --json --sandbox read-only --output-schema <schema> -
 
 Go envía el prompt por stdin, captura eventos y valida la salida. Para develop selecciona escritura en un checkout aislado. `doctor` comprobará versión, flags, autenticación, modelo y política efectiva. No usar flags antiguos por memoria ni ampliar permisos automáticamente si un comando falla.
 
-Para accesos desde chat, Codex admite descubrimiento local de skills; si se usa `.agents/skills` de un repositorio, será en el repo de conocimiento, no en el código analizado. El empaquetado debe adaptarse a la superficie concreta; no se garantiza un slash arbitrario solo por crear un archivo Markdown. [Skills de Codex](https://learn.chatgpt.com/docs/build-skills).
+El chat de Codex es la entrada principal. Se distribuirán skills explícitas `super-init`, `super-new` y las restantes fases, instaladas en ámbito de usuario o mediante el paquete de la herramienta, fuera del código analizado. La documentación oficial indica que las skills habilitadas aparecen en el menú `/` y también se pueden invocar con `$`. El instalador debe comprobar el nombre exacto `/super-new` en la versión y superficie utilizadas; escribir documentación no lo registra. [Comandos del chat](https://learn.chatgpt.com/docs/reference/slash-commands), [skills de Codex](https://learn.chatgpt.com/docs/build-skills).
 
 <a id="claude-code"></a>
 
@@ -85,17 +85,18 @@ El aislamiento de instrucciones de usuario, herramientas y memoria se comprobar�
 
 ## 📝 4. La experiencia /super-* y el clear
 
-Hay tres capas diferentes:
+La experiencia solicitada es escribir todos los comandos en esta ventana. La CLI queda como interfaz interna para skills, automatización y pruebas.
 
-| Capa | Garantía |
+| Capa | Responsabilidad |
 |---|---|
-| `super requirements SPEC-001` | Contrato portable y determinista de despacho |
-| `/super-requeriments SPEC-001` en `super shell` | Alias idéntico en una consola controlada por la aplicación |
-| Skill/comando dentro de Codex o Claude | Acceso dependiente de la superficie y versión del proveedor |
+| `/super-requeriments SPEC-001` en Codex | Seleccionar la skill y transmitir los parámetros explícitos |
+| Skill de despacho | Resolver la instalación, invocar Go y presentar resultados persistidos |
+| `super requirements SPEC-001` | Validar el contrato, resolver la solución y orquestar la fase |
+| Proceso nuevo de Codex o Claude | Ejecutar con contexto reconstruido y permisos de esa fase |
 
-La consola propia ofrece exactamente la sintaxis solicitada. Un chat existente puede conservar su historial visual, pero solo transmite el ID de SPEC y parámetros explícitos al orquestador. El agente de trabajo siempre arranca aparte. Pedir al modelo que escriba `/clear` no constituye una garantía programática.
+La skill no ejecuta el análisis dentro de la conversación actual ni decide por su cuenta los gates. El chat conserva su historial visible; Go crea una sesión de trabajo nueva por fase y no le envía ese historial. Un `/clear` automático de la interfaz no es una garantía ofrecida: el aislamiento pertenece al ejecutor y se comprueba con pruebas de contexto.
 
-La documentación de Codex describe `/new` para iniciar otro chat; esa función de interfaz es distinta del proceso nuevo que garantiza Super. [Comandos de Codex](https://learn.chatgpt.com/docs/developer-commands?surface=cli).
+La instalación inicial y el alta única de solución son operaciones distintas. Instalar la integración en otro equipo no repite `/super-init`; recupera la identidad y el conocimiento existente. El [contrato de chat](13-interfaz-codex-y-despacho.md) concreta rutas, aliases, resultados y errores.
 
 <a id="capacidades-y-compatibilidad"></a>
 

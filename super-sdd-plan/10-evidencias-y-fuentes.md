@@ -91,6 +91,7 @@ Las rutas son del equipo donde se realizó la inspección. Para hacer portable e
 |---|---|---|
 | Codex no interactivo | [OpenAI: non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode) | Proceso por fase, eventos y respuesta estructurada |
 | Codex skills | [OpenAI: build skills](https://learn.chatgpt.com/docs/build-skills) | Adaptadores de entrada y descubrimiento local |
+| Codex chat y skills en menú slash | [OpenAI: slash commands](https://learn.chatgpt.com/docs/reference/slash-commands) | Base documental para `/super-*`; registro exacto pendiente de prueba en la app |
 | Codex comandos | [OpenAI: developer commands](https://learn.chatgpt.com/docs/developer-commands?surface=cli) | Distinguir interfaz y ejecución nueva |
 | Claude programático | [Anthropic: headless](https://code.claude.com/docs/en/headless) | CLI y outputs del segundo adaptador |
 | Claude skills | [Anthropic: skills](https://code.claude.com/docs/en/skills) | Slash commands y wrappers |
@@ -116,7 +117,7 @@ Por indicación del usuario, el análisis inicial, todas las SPEC y la documenta
 
 La sintaxis de los nuevos diagramas se apoya en las referencias oficiales de [flowcharts](https://mermaid.js.org/syntax/flowchart.html) y [secuencias](https://mermaid.js.org/syntax/sequenceDiagram.html). El motor puede validar y renderizar en un entorno fijado; [Mermaid CLI](https://github.com/mermaid-js/mermaid-cli) es una opción de integración. El formato visual y las reglas de aplicación a cada artefacto son decisiones de este plan.
 
-**🧪 Verificación visual realizada:** 15 diagramas (incluido el ejemplo de plantilla) parseados y renderizados con Mermaid 11.12.0, con 30 renders entre tema claro y oscuro. Se inspeccionaron los resultados y se dividió la arquitectura en dos gráficos para mejorar su lectura. Esta versión identifica el entorno de QA de este plan; la versión del futuro motor se fijará en su toolchain. No se ha implementado todavía el renderizador Go ni sus gates de publicación.
+**🧪 Verificación visual realizada:** 16 diagramas (incluido el ejemplo de plantilla y la entrada desde el chat) parseados y renderizados con Mermaid 11.12.0, con 32 renders entre tema claro y oscuro. Se inspeccionaron los diagramas nuevos/modificados de arquitectura, integración y despacho. Se comprobaron enlaces internos y cierres de bloques de código. Esta versión identifica el entorno de QA de este plan; la versión del futuro motor se fijará en su toolchain. No se ha implementado todavía el renderizador Go ni sus gates de publicación.
 
 <a id="decisiones-que-debe-cerrar-setup"></a>
 

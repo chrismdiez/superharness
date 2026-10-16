@@ -2,6 +2,8 @@
 
 > 📝 **Estado:** propuesta de diseño · 🎨 **Perfil visual:** `markdown-mermaid@1.0.0`
 
+**▶️ Ejecución de este roadmap:** [RUN.md](../RUN.md) es la entrada para la IA; [14 — Plan de acción](14-plan-de-accion.md) desglosa estas capacidades en 26 tareas con checkboxes. Este documento mantiene la estrategia; el seguimiento operativo vive en ese checklist y su registro.
+
 
 **🧭 En este documento**
 
@@ -51,13 +53,13 @@ El repositorio piloto recomendado es `develapi-library`: ofrece una entidad y op
 | Fase | Trabajo | Entrega revisable | Termina cuando |
 |---|---|---|---|
 | 0. Contratos y baseline | Resolver supuestos de setup; fijar schemas, estados y perfil | SPEC del propio Super y ADR iniciales | Un ejemplo completo pasa validación sin LLM |
-| 1. Núcleo Go | Asociación código/conocimiento externo, CLI, IDs, SQLite, staging, manifiestos, locks, recovery | `init`, `status`, `validate` con proveedor simulado | Interrumpir y reanudar no pierde una revisión confirmada |
-| 2. Contexto y Codex | Adaptador CLI, salida estructurada, contexto nuevo, fuente local | `new → requirements → design → task` | Dos máquinas/configuraciones admitidas producen contratos equivalentes |
+| 1. Núcleo Go y entrada de chat | Asociación código/conocimiento externo, protocolo CLI/JSON, skills, instalador mínimo, IDs, SQLite, staging, locks, recovery | `/super-init`, `/super-status`, `/super-validate` desde Codex con proveedor simulado | El chat llama al binario correcto; interrumpir y reanudar no pierde una revisión confirmada |
+| 2. Contexto y Codex | Adaptador de ejecución, salida estructurada, contexto nuevo, fuente local | `/super-new → /super-requirements → /super-design → /super-task` desde el chat | Dos máquinas/configuraciones admitidas producen contratos equivalentes sin arrastrar historial |
 | 3. Grafo | PoC CodeGraphContext C#; fallback; selección de contexto | Índice y referencias verificadas | Recall acordado y ahorro medido sin omisiones críticas |
 | 4. Develop TDD | Worktree, runner, scopes, checkpoints, evidencia | Feature piloto implementada | RED/GREEN verificables, regresiones verdes y cero cambios ajenos |
 | 5. Review y GitHub | Diff, hallazgos, checks, PR idempotente a develop | PR piloto creada y revisada | SHA revisado coincide; reintento no duplica PR |
 | 6. Jira y close | Fuente Jira, outbox, transición, documentación y cierre | Ciclo completo con integración | Docs integradas, merge verificado y sincronización confirmada |
-| 7. Claude y distribución | Segundo adaptador, wrappers, instalador, evaluaciones | Mismo flujo en ambos proveedores | Misma semántica de gates y reanudación entre proveedores |
+| 7. Claude y distribución | Segundo adaptador y sus skills, distribución de equipo, evaluaciones | Mismo flujo en ambos proveedores | Misma semántica de gates y reanudación entre proveedores |
 
 Las fases 2 y 3 pueden intercambiarse si el grafo bloquea el piloto; la primera versión debe poder buscar código sin él de forma explícita. Ninguna fase puede declarar completado TDD mientras falte una infraestructura real de tests.
 
@@ -80,7 +82,7 @@ Las fases 2 y 3 pueden intercambiarse si el grafo bloquea el piloto; la primera 
 | SUPER-011 | Jira e importación ADF | 003, 010 | Cambio de ticket genera nueva revisión y no pisa decisiones |
 | SUPER-012 | Close y memoria en repo externo | 007, 010, 011 | Cierre enlaza commits de código y conocimiento sin mezclar sus PR |
 | SUPER-013 | Claude Code | 004, 005, 009 | Reanudar un plan Codex en Claude conserva contratos y progreso |
-| SUPER-014 | Consola slash y wrappers | 005 | Ambos nombres de requirements despachan la misma operación |
+| SUPER-014 | Skills de Codex, instalador mínimo y binding de proyecto; entregar en fase 1 | 001, 003 | `/super-new` llama a Go desde el chat; aliases equivalentes y proyecto ambiguo bloqueado |
 | SUPER-015 | Distribución y evaluaciones | 012, 013, 014 | Piloto reproducible desde instalación limpia |
 | SUPER-016 | Renderizador visual y validación documental | 001, 005 | Todos los Markdown usan el perfil; Mermaid renderiza y representa datos trazables |
 
@@ -126,6 +128,11 @@ No usar similitud textual de Markdown como métrica principal. Tampoco usar al m
 
 | Caso | Resultado requerido |
 |---|---|
+| Comando desde el chat de Codex | Skill habilitada, binario esperado y resultado de Go; sin terminal manual |
+| Comando literal frente a selección en menú | Probar ambos; si el literal no se resuelve, declarar limitación de esa versión |
+| Falta binario o skill | Diagnóstico de instalación; nunca simular el resultado de la fase |
+| Dos proyectos con SPEC-001 | Exigir binding o selección explícita; no elegir el más reciente |
+| Instrucción contradictoria en historial visible | El trabajador no la recibe; solo contrato y contexto persistido |
 | Init ya completado | Devuelve ALREADY_INITIALIZED sin mutaciones ni llamadas al modelo |
 | Segunda feature tras cerrar la primera | New carga la knowledge_revision de close sin repetir init |
 | Clon de solución inicializada | Recupera manifiestos y reconstruye caché sin reinicializar |
@@ -178,6 +185,6 @@ Factores que pueden ampliarla: paquetes privados y restore, compatibilidad del g
 
 ## 📝 9. Definición de terminado del MVP
 
-Una persona prepara una SPEC local o Jira, otra continúa desde archivos/bundle sin historial del chat, y ambas completan el mismo conjunto de requisitos bajo el perfil fijado. La implementación tiene pruebas RED/GREEN verificadas, PR de código hacia develop, revisión del commit correcto, documentación integrada en un repo Git separado, grafo externo actualizado y cierre reconciliado entre ambos commits. Los repositorios analizados no contienen SPEC, cachés ni documentación generada por Superharness. Todos los Markdown del flujo cumplen el perfil visual; los diagramas aplicables tienen validación sintáctica, render y revisión de coherencia. Repetir comandos no pierde progreso ni duplica operaciones remotas.
+Una persona utiliza `/super-*` en el chat de Codex, con instalación y resolución de proyecto verificadas, y prepara una SPEC local o Jira, otra continúa desde archivos/bundle sin historial del chat, y ambas completan el mismo conjunto de requisitos bajo el perfil fijado. La implementación tiene pruebas RED/GREEN verificadas, PR de código hacia develop, revisión del commit correcto, documentación integrada en un repo Git separado, grafo externo actualizado y cierre reconciliado entre ambos commits. Los repositorios analizados no contienen SPEC, cachés ni documentación generada por Superharness. Todos los Markdown del flujo cumplen el perfil visual; los diagramas aplicables tienen validación sintáctica, render y revisión de coherencia. Repetir comandos no pierde progreso ni duplica operaciones remotas.
 
 La prueba final debe incluir interrupción intencionada, cambio de proveedor y un requisito modificado para demostrar recuperación e invalidación. Si solo funciona el camino feliz en una máquina, el producto todavía no cumple el objetivo.

@@ -2,6 +2,8 @@
 
 > 📝 **Estado:** propuesta de diseño · 🎨 **Perfil visual:** `markdown-mermaid@1.0.0`
 
+**▶️ Para desarrollar la aplicación:** empieza en [RUN.md](../RUN.md). El [plan de acción con 26 tareas](14-plan-de-accion.md) contiene checkboxes, dependencias y criterios de aceptación; el [registro](../.execution/LOG.md) conserva la evidencia para retomar desde otro chat.
+
 **Raíz del proyecto:** `F:\Proyectos\superharness`
 
 **Versión:** 0.1 · **Fecha:** 16 de octubre de 2026 · **Estado:** propuesta para implementar.
@@ -46,6 +48,8 @@ Todos los `.md` generados por el flujo aplicarán **`markdown-mermaid@1.0.0`**: 
 | [10 — Evidencias y fuentes](10-evidencias-y-fuentes.md) | Alcance de inspección, referencias locales, fuentes oficiales y decisiones pendientes |
 | [11 — Repositorio de conocimiento](11-repositorio-de-conocimiento.md) | Separación física del código, estructura externa y cierre entre repositorios |
 | [🎨 12 — Estándar visual Markdown](12-estandar-visual-markdown.md) | Iconos, formato, Mermaid y validación para todos los `.md` del flujo |
+| [💬 13 — Comandos desde Codex](13-interfaz-codex-y-despacho.md) | Skills, despacho a Go, selección del proyecto y sesiones nuevas |
+| [✅ 14 — Plan de acción](14-plan-de-accion.md) | Checklist de implementación, dependencias y aceptación por tarea |
 
 <a id="flujo-solicitado"></a>
 
@@ -80,7 +84,7 @@ Se mantendrá `super-requeriments` como alias por compatibilidad con el nombre s
 
 ## 🏗️ Decisiones recomendadas
 
-1. Empezar por una CLI local en Go. Añadir una consola `super shell` para que los `/super-*` funcionen de forma uniforme, independientemente del proveedor.
+1. Usar esta ventana de Codex como interfaz principal: `/super-*` activa una skill instalada que invoca el ejecutable Go. La CLI es el contrato interno; el usuario no necesita abrir una terminal ni una consola propia.
 2. Ejecutar cada fase en un proceso de Codex o Claude nuevo; reconstruir el contexto desde archivos y evidencias. La conversación no será el almacenamiento.
 3. Guardar las especificaciones y decisiones en Markdown versionado, contratos estructurados en JSON y el diario de ejecución en SQLite local.
 4. Usar CodeGraphContext como candidato inicial, sujeto a una prueba con C#, `.slnx`, dependencias privadas y la DI real del proyecto. Mantener una interfaz que permita sustituirlo.
@@ -93,6 +97,6 @@ Se mantendrá `super-requeriments` como alias por compatibilidad con el nombre s
 
 ## 🎯 Por dónde empezar
 
-La primera entrega debe demostrar el recorrido `init → new → requirements → design → task` sobre una SPEC local y un repositorio. Debe sobrevivir a cerrar el proceso y continuar con otro usuario o proveedor. Después se incorporan TDD, review, Jira, GitHub y close. La aplicación debe gestionar su propio desarrollo con estas mismas especificaciones, una vez exista el motor mínimo.
+La primera entrega debe incluir la instalación de las skills y demostrar desde el chat de Codex el recorrido `init → new → requirements → design → task` sobre una SPEC local y un repositorio. Debe sobrevivir a cerrar el proceso y continuar con otro usuario o proveedor. Después se incorporan TDD, review, Jira, GitHub y close. La aplicación debe gestionar su propio desarrollo con estas mismas especificaciones, una vez exista el motor mínimo.
 
 Quedan configurables, sin bloquear este plan: producto exacto al que llamas «codegraph», Jira Cloud o Data Center, repositorio piloto, credenciales, modelos disponibles, política de revisión humana y correspondencia entre estados de Jira y estados del flujo. Los valores recomendados y sus límites están documentados.

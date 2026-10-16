@@ -54,7 +54,7 @@ Un requisito sin una forma de comprobarlo está incompleto. Una tarea sin requis
 
 | Capacidad | MVP | Evolución |
 |---|---|---|
-| CLI Go y archivos locales | Sí | Consola interactiva y panel opcional |
+| Chat de Codex, skills y motor Go con archivos externos | Sí | Adaptador de chat Claude y panel opcional |
 | Adaptador Codex | Sí | Claude Code con los mismos contratos |
 | Repositorios por SPEC | Un repo de código + un repo externo de conocimiento | Varios repositorios de código por SPEC |
 | Fuente de ticket local | Primero | Jira Cloud; Data Center como adaptador distinto |

@@ -22,8 +22,10 @@
 ```mermaid
 flowchart LR
   accTitle: Control del flujo y conocimiento
-  accDescr: La CLI invoca el motor, que valida contratos, prepara contexto y conserva el estado.
-  CLI["CLI Super"] --> Engine["Motor Go"]
+  accDescr: El chat activa una skill que invoca Go; el motor valida contratos, prepara contexto y conserva el estado.
+  Chat["Chat Codex: /super-*"] --> Skill["Skill de despacho"]
+  Skill --> CLI["CLI interna Super"]
+  CLI --> Engine["Motor Go"]
   Engine --> Contracts["Contratos y gates"]
   Engine --> Context["Constructor de contexto"]
   Engine --> State["SQLite y artefactos"]
@@ -56,7 +58,8 @@ Estructura propuesta:
 ```text
 cmd/super/main.go
 internal/
-  cli/                    # argumentos, consola, códigos de salida
+  cli/                    # argumentos, protocolo JSON y códigos de salida
+  chatbridge/             # binding de proyecto y solicitudes desde skills
   domain/                 # Spec, Task, Run, Evidence, Finding
   workflow/               # transiciones y ejecución de fases
   contracts/              # JSON Schema y validadores semánticos

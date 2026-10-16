@@ -51,7 +51,7 @@ Para demostrar una modificación real, supongamos un ticket aceptado: **«Reduci
 ## ⚙️ 2. Init: solo en el alta inicial de la solución
 
 ```text
-super init --knowledge-root F:\Proyectos\_Develapi\develapi-superharness --code-root F:\Proyectos\_Develapi\develapi-library --solution DevelApi.Library.slnx
+/super-init --knowledge-root F:\Proyectos\_Develapi\develapi-superharness --code-root F:\Proyectos\_Develapi\develapi-library --solution DevelApi.Library.slnx
 ```
 
 Este paso solo se realiza si Library aún no está inicializada; se omite para todas las SPEC posteriores. Detecta variante Library, solución, .NET 10, FluentValidation y ausencia de proyecto de tests localizado. Genera mapa, análisis inicial e índice en `develapi-superharness`; no crea artefactos dentro de Library. No crea tests aún: prepara una tarea habilitadora para develop.
@@ -153,24 +153,24 @@ Una futura SPEC recuperará el contrato vigente de máximo 50 desde `develapi-su
 
 ## 📝 10. Secuencia de uso prevista
 
-Ejemplo propuesto, ejecutado desde la raíz del repo de conocimiento. Los flags deben implementarse y no son comandos disponibles todavía.
+Ejemplo propuesto: escribir cada línea de comando en esta ventana de Codex, una por fase. Las skills estarán instaladas y el proyecto del chat tendrá un binding persistido al repo de conocimiento. Go ejecutará internamente los subcomandos equivalentes. Los flags deben implementarse y no son comandos disponibles todavía.
 
 ```text
 # Una sola vez por solución; prepara o reutiliza el repo complementario
-super init --knowledge-root F:\Proyectos\_Develapi\develapi-superharness --code-root F:\Proyectos\_Develapi\develapi-library --solution DevelApi.Library.slnx
+/super-init --knowledge-root F:\Proyectos\_Develapi\develapi-superharness --code-root F:\Proyectos\_Develapi\develapi-library --solution DevelApi.Library.slnx
 # Ciclo por feature, con raíces resueltas desde la configuración externa
-super new SPEC-001 --source local:.inbox/SPEC-001.md
-super requirements SPEC-001
-super design SPEC-001
-super task SPEC-001
-super develop SPEC-001
-super review SPEC-001
+/super-new SPEC-001 --source local:.inbox/SPEC-001.md
+/super-requirements SPEC-001
+/super-design SPEC-001
+/super-task SPEC-001
+/super-develop SPEC-001
+/super-review SPEC-001
 # Merge de código mediante el flujo autorizado del equipo
-super close SPEC-001
+/super-close SPEC-001
 # Si la documentación requiere PR, integrarla en el repo de conocimiento
 # y repetir close para verificar la publicación y completar el cierre
 ```
 
-La siguiente feature empieza con `super new SPEC-002`: carga la revisión de conocimiento publicada por close de SPEC-001. No vuelve a ejecutar init.
+La siguiente feature empieza con `/super-new SPEC-002`: carga la revisión de conocimiento publicada por close de SPEC-001. No vuelve a ejecutar init.
 
-Si un paso queda bloqueado, `super status SPEC-001` muestra la evidencia o pregunta pendiente. Resolverla y repetir el comando conserva el progreso. Las SPEC se guardan en `develapi-superharness/.specs/SPEC-001/` y `.specs/SPEC-002/`; la implementación y tests permanecen en Library.
+Si un paso queda bloqueado, `/super-status SPEC-001` muestra la evidencia o pregunta pendiente. Resolverla y repetir el comando conserva el progreso. Las SPEC se guardan en `develapi-superharness/.specs/SPEC-001/` y `.specs/SPEC-002/`; la implementación y tests permanecen en Library.
